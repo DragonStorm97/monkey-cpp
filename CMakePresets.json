@@ -1,0 +1,206 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 23,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "default",
+      "displayName": "Default Config",
+      "description": "Default build using Ninja generator",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/default",
+      "installDir": "${sourceDir}/install/default",
+      "cacheVariables": {
+        "PLATFORM": "Desktop",
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_C_COMPILER": "clang-19",
+        "CMAKE_CXX_COMPILER": "clang++-19"
+      },
+      "environment": {
+        "PATH": "$env{HOME}/ninja/bin:$penv{PATH}"
+      }
+    },
+    {
+      "name": "ninja-multi",
+      "inherits": "default",
+      "displayName": "Ninja Multi-Config",
+      "description": "Default build using Ninja Multi-Config generator",
+      "generator": "Ninja Multi-Config",
+      "binaryDir": "${sourceDir}/build/ninja-multi",
+      "installDir": "${sourceDir}/install/ninja-multi"
+    },
+    {
+      "name": "windows-only",
+      "inherits": "default",
+      "displayName": "Windows-only configuration",
+      "description": "This build is only available on Windows",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    },
+    {
+      "name": "cicd",
+      "displayName": "CI/CD configuration",
+      "description": "This build is used for CI/CD workflows",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/cicd",
+      "installDir": "${sourceDir}/install/cicd",
+      "cacheVariables": {
+        "PLATFORM": "Desktop",
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "web",
+      "displayName": "Web configuration",
+      "description": "This build is used for Web Workflows",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/web",
+      "installDir": "${sourceDir}/install/web",
+      "cacheVariables": {
+        "CMAKE_CROSSCOMPILING_EMULATOR": "$env{EMSDK_NODE}",
+        "CMAKE_TOOLCHAIN_FILE": "$env{EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake",
+        "CMAKE_BUILD_TYPE": "Release",
+        "PLATFORM": "Web",
+        "EMSDK": "$env{EMSDK}"
+      },
+      "environment": {
+        "EMSDK_NODE": "$penv{EMSDK_NODE}",
+        "EMSDK": "$penv{EMSDK}",
+        "EMSCRIPTEN": "$penv{EMSCRIPTEN}",
+        "PATH": "$env{HOME}/ninja/bin:$penv{PATH}"
+      }
+    },
+    {
+      "name": "cicd-web",
+      "inherits": "web",
+      "displayName": "CI/CD Web configuration",
+      "description": "This build is used for CI/CD Web Workflows",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/cicd-web",
+      "installDir": "${sourceDir}/install/cicd-web"
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "default",
+      "configurePreset": "default",
+      "jobs": 24
+    },
+    {
+      "name": "cicd",
+      "configurePreset": "cicd"
+    },
+    {
+      "name": "web",
+      "configurePreset": "web",
+      "jobs": 24
+    },
+    {
+      "name": "cicd-web",
+      "configurePreset": "cicd-web"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "default",
+      "configurePreset": "default",
+      "output": { "outputOnFailure": true },
+      "execution": { "noTestsAction": "error", "stopOnFailure": false }
+    },
+    {
+      "name": "cicd",
+      "configurePreset": "cicd",
+      "output": { "outputOnFailure": true },
+      "execution": { "noTestsAction": "error", "stopOnFailure": false }
+    },
+    {
+      "name": "web",
+      "configurePreset": "web",
+      "output": { "outputOnFailure": true },
+      "execution": { "noTestsAction": "error", "stopOnFailure": false }
+    },
+    {
+      "name": "cicd-web",
+      "configurePreset": "cicd-web",
+      "output": { "outputOnFailure": true },
+      "execution": { "noTestsAction": "error", "stopOnFailure": false }
+    }
+  ],
+  "packagePresets": [],
+  "workflowPresets": [
+    {
+      "name": "default",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "default"
+        },
+        {
+          "type": "build",
+          "name": "default"
+        },
+        {
+          "type": "test",
+          "name": "default"
+        }
+      ]
+    },
+    {
+      "name": "cicd",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "cicd"
+        },
+        {
+          "type": "build",
+          "name": "cicd"
+        },
+        {
+          "type": "test",
+          "name": "cicd"
+        }
+      ]
+    },
+    {
+      "name": "web",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "web"
+        },
+        {
+          "type": "build",
+          "name": "web"
+        },
+        {
+          "type": "test",
+          "name": "web"
+        }
+      ]
+    },
+    {
+      "name": "cicd-web",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "cicd-web"
+        },
+        {
+          "type": "build",
+          "name": "cicd-web"
+        },
+        {
+          "type": "test",
+          "name": "cicd-web"
+        }
+      ]
+    }
+  ]
+}
