@@ -866,7 +866,7 @@ namespace mpp
     struct ExpressionStatement
     {
       std::optional<Expression> expression;
-      Token token{};
+      Token token;
 
       [[nodiscard]] constexpr bool operator==(const ExpressionStatement &) const = default;
 
@@ -1552,6 +1552,7 @@ namespace mpp
     };
 
     struct Object;
+    // TODO: this should probably be a std::span<Object> instead of std::vector<Object>
     using BuiltinFunctionType = Object(std::vector<Object>);
     struct FunctionObject
     {
@@ -1649,10 +1650,11 @@ namespace mpp
 
   template<class... Ts> struct overload : Ts... { using Ts::operator()...; };
   template<class... Ts> overload(Ts...) -> overload<Ts...>;
+
   struct Environment
   {
     Environment *parent = nullptr;
-    std::vector<std::pair<std::string, Object::Object>> vars{};
+    std::vector<std::pair<std::string, Object::Object>> vars;
 
     constexpr explicit Environment(Environment *parent) : parent(parent) {}
     constexpr Environment() = default;
@@ -1664,16 +1666,18 @@ namespace mpp
 
     [[nodiscard]] std::optional<Object::Object> Get(std::string_view name) const noexcept
     {
-      if (auto iter = std::ranges::find(vars, std::string{ name }, &std::pair<std::string, Object::Object>::first); iter != vars.end()) 
+      auto* env = this;
+      while(env != nullptr)
       {
-        return { iter->second };
-      }
-      if (parent != nullptr) 
-      { 
-        return parent->Get(name); 
+        if (auto iter = std::ranges::find(env->vars, std::string{ name }, &std::pair<std::string, Object::Object>::first); iter != env->vars.end()) 
+        {
+          return { iter->second };
+        }
+        env = env->parent;
       }
       return std::nullopt;
     }
+
     constexpr void Add(std::string_view name,const Object::Object& value)
     {
       //vars.emplace(std::string{ name }, value);
@@ -1685,11 +1689,12 @@ namespace mpp
       vars.emplace_back(name, value);
     }
   };
+
   struct Evaluator
   {
-    std::vector<std::unique_ptr<Object::Object>> heldObjects{};
-    std::vector<Environment*> EnvStack{};
-    std::vector<std::unique_ptr<Environment>> HostedEnvironments{};
+    std::vector<std::unique_ptr<Object::Object>> heldObjects;
+    std::vector<Environment*> EnvStack;
+    std::vector<std::unique_ptr<Environment>> HostedEnvironments;
     std::vector<std::function<Object::BuiltinFunctionType>> BuiltinFunctions;
 
     constexpr Evaluator() 
