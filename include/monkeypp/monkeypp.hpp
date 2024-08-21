@@ -1,6 +1,7 @@
 // The main include files for this library monkeypp
 #pragma once
 
+#include <cstddef>
 #include <iostream>
 #include <iterator>
 #include <string_view>
